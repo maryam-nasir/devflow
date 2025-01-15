@@ -4,6 +4,7 @@ import React from "react";
 
 import "./globals.css";
 import Navbar from "@/components/navigation/navbar";
+import { Toaster } from "@/components/ui/toaster";
 import ThemeProvider from "@/context/Theme";
 
 const inter = localFont({
@@ -45,6 +46,8 @@ export default function RootLayout({
         >
           {children}
         </ThemeProvider>
+
+        <Toaster />
       </body>
     </html>
   );
