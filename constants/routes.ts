@@ -11,6 +11,7 @@ const ROUTES = {
   ASK_QUESTION: "/ask-question",
 
   QUESTION: (id: string) => `/question/${id}`,
+  USER_PROFILE: (id: string) => `/profile/${id}`,
   TAG: (id: string) => `/tags/${id}`,
 };
 
