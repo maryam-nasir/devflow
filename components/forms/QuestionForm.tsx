@@ -1,6 +1,9 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
+import { MDXEditorMethods } from "@mdxeditor/editor";
+import dynamic from "next/dynamic";
+import { useRef } from "react";
 import { useForm } from "react-hook-form";
 
 import { AskQuestionSchema } from "@/lib/validations";
@@ -17,7 +20,13 @@ import {
 } from "../ui/form";
 import { Input } from "../ui/input";
 
+const Editor = dynamic(() => import("../editor"), {
+  ssr: false,
+});
+
 const QuestionForm = () => {
+  const editorRef = useRef<MDXEditorMethods>(null);
+
   const form = useForm({
     resolver: zodResolver(AskQuestionSchema),
     defaultValues: {
@@ -49,7 +58,7 @@ const QuestionForm = () => {
                   className="paragraph-regular no-focus background-light700_dark300 text-dark300_light700 light-border-2 min-h-[56px] border"
                 />
               </FormControl>
-              <FormDescription className="body-regular mt-2.5 text-light-500">
+              <FormDescription className="body-regular text-light-500 mt-2.5">
                 Be specific and imagine you&apos;re asking a question to another
                 person.
               </FormDescription>
@@ -67,8 +76,14 @@ const QuestionForm = () => {
                 Detailed explanation of your problem{" "}
                 <span className="text-primary-500">*</span>
               </FormLabel>
-              <FormControl>Editor</FormControl>
-              <FormDescription className="body-regular mt-2.5 text-light-500">
+              <FormControl>
+                <Editor
+                  editorRef={editorRef}
+                  value={field.value}
+                  fieldChange={field.onChange}
+                />
+              </FormControl>
+              <FormDescription className="body-regular text-light-500 mt-2.5">
                 Introduce the problem and expand on what you&apos;ve put in the
                 title.
               </FormDescription>
@@ -95,7 +110,7 @@ const QuestionForm = () => {
                   Tags
                 </div>
               </FormControl>
-              <FormDescription className="body-regular mt-2.5 text-light-500">
+              <FormDescription className="body-regular text-light-500 mt-2.5">
                 Add up to 5 tags to describe what your question is about. You
                 need to press enter to add a tag.
               </FormDescription>
@@ -107,7 +122,7 @@ const QuestionForm = () => {
         <div className="mt-16 flex justify-end">
           <Button
             type="submit"
-            className="primary-gradient w-fit !text-light-900"
+            className="primary-gradient !text-light-900 w-fit"
           >
             Ask A Question
           </Button>
