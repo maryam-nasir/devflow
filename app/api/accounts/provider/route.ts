@@ -10,6 +10,8 @@ import { APIErrorResponse } from "@/types/global";
 // POST /api/accounts/provider
 export async function POST(request: Request) {
   try {
+    await dbConnect();
+
     const { providerAccountId } = await request.json();
     const validatedData = AccountSchema.partial().safeParse({
       providerAccountId,
@@ -17,8 +19,6 @@ export async function POST(request: Request) {
 
     if (!validatedData.success)
       throw new ValidationError(validatedData.error.flatten().fieldErrors);
-
-    await dbConnect();
 
     const account = await Account.findOne({ providerAccountId });
     if (!account) {
