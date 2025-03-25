@@ -3,11 +3,13 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { MDXEditorMethods } from "@mdxeditor/editor";
 import dynamic from "next/dynamic";
-import { useRef } from "react";
+import React, { useRef } from "react";
 import { useForm } from "react-hook-form";
+import { z } from "zod";
 
 import { AskQuestionSchema } from "@/lib/validations";
 
+import TagCard from "../cards/TagCard";
 import { Button } from "../ui/button";
 import {
   Form,
@@ -27,7 +29,7 @@ const Editor = dynamic(() => import("../editor"), {
 const QuestionForm = () => {
   const editorRef = useRef<MDXEditorMethods>(null);
 
-  const form = useForm({
+  const form = useForm<z.infer<typeof AskQuestionSchema>>({
     resolver: zodResolver(AskQuestionSchema),
     defaultValues: {
       title: "",
@@ -36,7 +38,47 @@ const QuestionForm = () => {
     },
   });
 
-  const handleCreateQuestion = () => {};
+  const handleCreateQuestion = (data: z.infer<typeof AskQuestionSchema>) => {
+    console.log("Form Data: ", data);
+  };
+
+  const handleInputKeyDown = (
+    e: React.KeyboardEvent<HTMLInputElement>,
+    field: { value: string[] }
+  ) => {
+    if (e.key === "Enter") {
+      e.preventDefault();
+      const tagInput = e.currentTarget.value.trim();
+
+      if (tagInput && tagInput.length < 15 && !field.value.includes(tagInput)) {
+        form.setValue("tags", [...field.value, tagInput]);
+        e.currentTarget.value = "";
+        form.clearErrors("tags");
+      } else if (tagInput.length > 15) {
+        form.setError("tags", {
+          type: "manual",
+          message: "Tag should be less than 15 characters.",
+        });
+      } else if (field.value.includes(tagInput)) {
+        form.setError("tags", {
+          type: "manual",
+          message: "Tag already exists.",
+        });
+      }
+    }
+  };
+
+  const handleTagRemove = (tag: string, field: { value: string[] }) => {
+    const newTags = field.value.filter((t) => t !== tag);
+    form.setValue("tags", newTags);
+
+    if (newTags.length === 0) {
+      form.setError("tags", {
+        type: "manual",
+        message: "Tags are required.",
+      });
+    }
+  };
 
   return (
     <Form {...form}>
@@ -58,7 +100,7 @@ const QuestionForm = () => {
                   className="paragraph-regular no-focus background-light700_dark300 text-dark300_light700 light-border-2 min-h-[56px] border"
                 />
               </FormControl>
-              <FormDescription className="body-regular text-light-500 mt-2.5">
+              <FormDescription className="body-regular mt-2.5 text-light-500">
                 Be specific and imagine you&apos;re asking a question to another
                 person.
               </FormDescription>
@@ -83,7 +125,7 @@ const QuestionForm = () => {
                   fieldChange={field.onChange}
                 />
               </FormControl>
-              <FormDescription className="body-regular text-light-500 mt-2.5">
+              <FormDescription className="body-regular mt-2.5 text-light-500">
                 Introduce the problem and expand on what you&apos;ve put in the
                 title.
               </FormDescription>
@@ -103,14 +145,28 @@ const QuestionForm = () => {
               <FormControl>
                 <div>
                   <Input
-                    {...field}
                     className="paragraph-regular no-focus background-light700_dark300 text-dark300_light700 light-border-2 min-h-[56px] border"
                     placeholder="Add tags..."
+                    onKeyDown={(e) => handleInputKeyDown(e, field)}
                   />
-                  Tags
+                  {field.value.length > 0 && (
+                    <div className="flex-start mt-2.5 flex-wrap gap-2.5">
+                      {field.value.map((tag: string) => (
+                        <TagCard
+                          key={tag}
+                          name={tag}
+                          _id={tag}
+                          isCompact
+                          isButton
+                          showRemoveButton
+                          handleRemove={() => handleTagRemove(tag, field)}
+                        />
+                      ))}
+                    </div>
+                  )}
                 </div>
               </FormControl>
-              <FormDescription className="body-regular text-light-500 mt-2.5">
+              <FormDescription className="body-regular mt-2.5 text-light-500">
                 Add up to 5 tags to describe what your question is about. You
                 need to press enter to add a tag.
               </FormDescription>
@@ -122,7 +178,7 @@ const QuestionForm = () => {
         <div className="mt-16 flex justify-end">
           <Button
             type="submit"
-            className="primary-gradient !text-light-900 w-fit"
+            className="primary-gradient w-fit !text-light-900"
           >
             Ask A Question
           </Button>
